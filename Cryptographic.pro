@@ -3,20 +3,19 @@ QT -= gui
 
 CONFIG += c++11
 
-TARGET = Cryptographic
-CONFIG += console
-CONFIG -= app_bundle
+TARGET = cryptographic
 
-TEMPLATE = app
+TEMPLATE = lib
 
-SOURCES += main.cpp \
+SOURCES += \
     cryptographic.cpp
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which as been marked deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the
 # deprecated API in order to know how to port your code away from it.
-DEFINES += QT_DEPRECATED_WARNINGS
+DEFINES += QT_DEPRECATED_WARNINGS \
+    CRYPTOGRAPHIC_LIBRARY
 
 # You can also make your code fail to compile if you use deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -26,4 +25,5 @@ DEFINES += QT_DEPRECATED_WARNINGS
 LIBS += /usr/lib/libcrypto.so
 
 HEADERS += \
-    cryptographic.h
+    cryptographic.h \
+    cryptographic_global.h

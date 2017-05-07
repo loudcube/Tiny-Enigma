@@ -27,6 +27,7 @@
 #define IV_LENGTH 16
 #define BLOCK_SIZE IV_LENGTH
 
+#include "cryptographic_global.h"
 #include <stdio.h>
 #include <openssl/evp.h>
 #include <openssl/conf.h>
@@ -36,7 +37,7 @@
 #include <QDebug>
 #include <QByteArray>
 
-class Cryptographic : public QObject
+class CRYPT_SHARED_EXPORT Cryptographic : public QObject
 {
     Q_OBJECT
 public:

@@ -1,0 +1,12 @@
+#ifndef CRYPTOGRAPHIC_GLOBAL_H
+#define CRYPTOGRAPHIC_GLOBAL_H
+
+#include <QtCore/qglobal.h>
+
+#if defined(CRYPTOGRAPHIC_LIBRARY)
+#  define CRYPT_SHARED_EXPORT Q_DECL_EXPORT
+#else
+#  define CRYPT_SHARED_EXPORT Q_DECL_IMPORT
+#endif
+
+#endif // CRYPTOGRAPHIC_GLOBAL_H
