@@ -70,28 +70,6 @@ QByteArray Cryptographic::encrypt(QByteArray &plain)
     
     qDebug() << "plain_len = " << plain_len;
     
-    // encrypt data block-wise
-    /*int remaining_plain_len = plain_len;
-    while(remaining_plain_len >= BLOCK_SIZE)
-    {
-        if(EVP_EncryptUpdate(ctx, cipher_data, &tmp_len, plain_data, plain_len) != 1)
-        {
-            qDebug() << "unable to initialize encryption encrypt(ByteArray&)";
-            throw QString("unable to initialize encryption encrypt(ByteArray&)");
-        }
-        else
-        {
-            qDebug() << "updated cipher data";
-            cipher_len += BLOCK_SIZE;
-            remaining_plain_len -= BLOCK_SIZE;
-            plain_data += tmp_len;
-            
-            qDebug() << "update tmp_len: " << tmp_len;
-            
-            cipher.append(reinterpret_cast<char*>(cipher_data), BLOCK_SIZE);
-        }
-    }*/
-    
     if(EVP_EncryptUpdate(ctx, cipher_data, &tmp_len, plain_data, plain_len) != 1)
     {
         qDebug() << "unable to initialize encryption encrypt(ByteArray&)";
@@ -130,7 +108,7 @@ QByteArray Cryptographic::decrypt(QByteArray &cipher)
     // retrieve pointer to data of QByteArray --> needs reinterpret cast
     unsigned char *cipher_data = reinterpret_cast<unsigned char*>(cipher.data());
     int cipher_len = cipher.size();
-    // cipher data --> to be filled by EVP_EncryptUpdate()
+    // cipher data --> to be filled by EVP_DecryptUpdate()
     unsigned char *plain_data = reinterpret_cast<unsigned char*>(malloc(sizeof(unsigned char*) * (cipher_len + BLOCK_SIZE)));
     int tmp_len = 0;
     int plain_len = 0;
@@ -162,28 +140,6 @@ QByteArray Cryptographic::decrypt(QByteArray &cipher)
     }
     
     qDebug() << "cipher_len = " << cipher_len;
-    
-    // decrypt data block-wise
-    /*int remaining_cipher_len = cipher_len;
-    while(remaining_cipher_len >= BLOCK_SIZE)
-    {
-        if(EVP_DecryptUpdate(ctx, plain_data, &tmp_len, cipher_data, cipher_len) != 1)
-        {
-            qDebug() << "unable to initialize decryption decrypt(ByteArray&)";
-            throw QString("unable to initialize decryption decrypt(ByteArray&)");
-        }
-        else
-        {
-            qDebug() << "updated plain data";
-            plain_len += BLOCK_SIZE;
-            remaining_cipher_len -= BLOCK_SIZE;
-            cipher_data += tmp_len;
-            
-            qDebug() << "update tmp_len: " << tmp_len;
-            
-            plain.append(reinterpret_cast<char*>(plain_data), BLOCK_SIZE);
-        }
-    }*/
     
     if(EVP_DecryptUpdate(ctx, plain_data, &tmp_len, cipher_data, cipher_len) != 1)
     {
