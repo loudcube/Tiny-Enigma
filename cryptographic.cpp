@@ -69,8 +69,6 @@ QByteArray Cryptographic::encryptByteArray(QByteArray &plain)
         qDebug() << "initialized encryption";
     }
     
-    qDebug() << "plain_len = " << plain_len;
-    
     if(EVP_EncryptUpdate(ctx, cipher_data, &tmp_len, plain_data, plain_len) != 1)
     {
         qDebug() << "unable to initialize encryption encrypt(ByteArray&)";
@@ -80,8 +78,6 @@ QByteArray Cryptographic::encryptByteArray(QByteArray &plain)
     {
         qDebug() << "updated cipher data";
         cipher_len += tmp_len;
-        
-        qDebug() << "update tmp_len: " << tmp_len;
     }
     
     if(EVP_EncryptFinal_ex(ctx, cipher_data + tmp_len, &tmp_len) != 1)
@@ -96,8 +92,6 @@ QByteArray Cryptographic::encryptByteArray(QByteArray &plain)
         
         cipher.append(reinterpret_cast<char*>(cipher_data), cipher_len);
     }
-    
-    qDebug() << "cipher_len = " << cipher_len;
     
     EVP_CIPHER_CTX_cleanup(ctx);
     
@@ -140,8 +134,6 @@ QByteArray Cryptographic::decryptByteArray(QByteArray &cipher)
         qDebug() << "initialized decryption";
     }
     
-    qDebug() << "cipher_len = " << cipher_len;
-    
     if(EVP_DecryptUpdate(ctx, plain_data, &tmp_len, cipher_data, cipher_len) != 1)
     {
         qDebug() << "unable to initialize decryption decrypt(ByteArray&)";
@@ -151,8 +143,6 @@ QByteArray Cryptographic::decryptByteArray(QByteArray &cipher)
     {
         qDebug() << "updated plain data";
         plain_len += tmp_len;
-        
-        qDebug() << "update tmp_len: " << tmp_len;
     }
     
     if(EVP_DecryptFinal_ex(ctx, plain_data + tmp_len, &tmp_len) != 1)
@@ -168,8 +158,6 @@ QByteArray Cryptographic::decryptByteArray(QByteArray &cipher)
         
         plain.append(reinterpret_cast<char*>(plain_data), plain_len);
     }
-    
-    qDebug() << "plain_len = " << plain_len;
     
     EVP_CIPHER_CTX_cleanup(ctx);
     
