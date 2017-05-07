@@ -32,9 +32,10 @@ QByteArray Cryptographic::iv()
     return iv;
 }
 
-QByteArray Cryptographic::encrypt(QByteArray &plain)
+QByteArray Cryptographic::encryptByteArray(QByteArray &plain)
 {
     // retrieve pointer to data of QByteArray --> needs reinterpret cast
+    // actually this causes a dep copy, mabey use QByteArray::constData()
     unsigned char *plain_data = reinterpret_cast<unsigned char*>(plain.data());
     int plain_len = plain.size();
     // cipher data --> to be filled by EVP_EncryptUpdate()
@@ -103,7 +104,7 @@ QByteArray Cryptographic::encrypt(QByteArray &plain)
     return cipher;
 }
 
-QByteArray Cryptographic::decrypt(QByteArray &cipher)
+QByteArray Cryptographic::decryptByteArray(QByteArray &cipher)
 {
     // retrieve pointer to data of QByteArray --> needs reinterpret cast
     unsigned char *cipher_data = reinterpret_cast<unsigned char*>(cipher.data());

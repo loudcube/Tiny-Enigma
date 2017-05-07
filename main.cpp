@@ -22,12 +22,12 @@ int main(int argc, char *argv[])
     qDebug() << p.toHex();
     qDebug() << "---------------------------";
     qDebug() << "Cipher data";
-    QByteArray encrypted = crypto.encrypt(p);
+    QByteArray encrypted = crypto.encryptByteArray(p);
     qDebug() << "---------------------------";
     qDebug() << encrypted.toHex();
     qDebug() << "---------------------------";
     qDebug() << "Encrypted plain data";
-    qDebug() << crypto.decrypt(encrypted).toHex();
+    qDebug() << crypto.decryptByteArray(encrypted).toHex();
     
     return a.exec();
 }

@@ -52,9 +52,9 @@ public:
     QByteArray iv();
     
     // encrypt data
-    QByteArray encrypt(QByteArray &plain);
+    QByteArray encryptByteArray(QByteArray &plain);
     // decrypt data
-    QByteArray decrypt(QByteArray &cipher);
+    QByteArray decryptByteArray(QByteArray &cipher);
 
 signals:
 
