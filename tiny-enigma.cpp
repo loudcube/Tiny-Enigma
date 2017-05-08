@@ -10,6 +10,7 @@ TinyEnigma::TinyEnigma(QString &password, QObject *parent)
     : QObject(parent)
 {
     initOpenSsl();
+    m_salt = generateSalt();
     m_key = reinterpret_cast<unsigned char*>(deriveKey(password).data());
     m_iv = reinterpret_cast<unsigned char*>(generateIV().data());
 }
@@ -28,6 +29,11 @@ QByteArray TinyEnigma::key()
     QByteArray key;
     key.append(reinterpret_cast<const char*>(m_key), KEY_LENGTH);
     return key;
+}
+
+QByteArray TinyEnigma::salt()
+{
+    return m_salt;
 }
 
 QByteArray TinyEnigma::iv()
@@ -183,6 +189,8 @@ QByteArray TinyEnigma::deriveKey(QString &password)
 {
     // transform password into c string i.e. const char*
     const char *password_cstr = password.toStdString().c_str();
+    // salt
+    const unsigned char *salt = reinterpret_cast<const unsigned char*>(m_salt.constData());
     // allocate key memory
     unsigned char *key = (unsigned char*) malloc(KEY_LENGTH * sizeof(unsigned char));
     // check for success
@@ -192,7 +200,7 @@ QByteArray TinyEnigma::deriveKey(QString &password)
         throw QString("unable to allocate key memory: deriveKey(QString&)");
     }
     
-    if(!PKCS5_PBKDF2_HMAC_SHA1(password_cstr, strlen(password_cstr), NULL, 0, 1000, KEY_LENGTH, key))
+    if(!PKCS5_PBKDF2_HMAC_SHA1(password_cstr, strlen(password_cstr), salt, BLOCK_SIZE, 1000, KEY_LENGTH, key))
     {
         qDebug() << "error at: deriveKey(QString&)";
         throw QString("error at: deriveKey(QString&)");
@@ -214,4 +222,9 @@ QByteArray TinyEnigma::generateIV()
     QByteArray iv_container;
     iv_container.setRawData(reinterpret_cast<const char*>(iv), IV_LENGTH);
     return iv_container;
+}
+
+QByteArray TinyEnigma::generateSalt()
+{
+    return generateIV();
 }

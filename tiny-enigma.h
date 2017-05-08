@@ -55,6 +55,7 @@ public:
     
     // get methods
     QByteArray key();
+    QByteArray salt();
     QByteArray iv();
     
     // encrypt a whole file
@@ -67,6 +68,7 @@ public slots:
 
 private:
     unsigned char *m_key = nullptr;
+    QByteArray m_salt;
     unsigned char *m_iv = nullptr;
     EVP_CIPHER_CTX *m_ctx = nullptr;
 
@@ -76,6 +78,8 @@ private:
     void initCtx();
     // generate iv
     QByteArray generateIV();
+    // generate salt, uses generateIV()
+    QByteArray generateSalt();
     // derive key from password
     QByteArray deriveKey(QString &password);
 };
