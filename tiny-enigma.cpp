@@ -1,4 +1,4 @@
-#include "cryptographic.h"
+#include "tiny-enigma.h"
 
 Cryptographic::Cryptographic(unsigned char *key, unsigned char *iv, QObject *parent) 
     : QObject(parent), m_key(key), m_iv(iv)

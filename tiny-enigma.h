@@ -30,7 +30,7 @@
 #define BLOCK_SIZE IV_LENGTH
 #define BUFFER_SIZE 1024
 
-#include "cryptographic_global.h"
+#include "tiny-enigma_global.h"
 #include <stdio.h>
 #include <openssl/evp.h>
 #include <openssl/conf.h>
@@ -42,7 +42,7 @@
 #include <QFile>
 #include <QDataStream>
 
-class CRYPT_SHARED_EXPORT Cryptographic : public QObject
+class TINY_ENIGMA_SHARED_EXPORT Cryptographic : public QObject
 {
     Q_OBJECT
 public:

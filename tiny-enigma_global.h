@@ -1,0 +1,12 @@
+#ifndef TINY_ENIGMA_GLOBAL_H
+#define TINY_ENIGMA_GLOBAL_H
+
+#include <QtCore/qglobal.h>
+
+#if defined(TINY_ENIGMA_LIBRARY)
+#  define TINY_ENIGMA_SHARED_EXPORT Q_DECL_EXPORT
+#else
+#  define TINY_ENIGMA_SHARED_EXPORT Q_DECL_IMPORT
+#endif
+
+#endif // TINY_ENIGMA_GLOBAL_H
