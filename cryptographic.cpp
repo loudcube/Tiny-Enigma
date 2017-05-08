@@ -18,90 +18,29 @@ Cryptographic::~Cryptographic()
 {
     free(m_key);
     free(m_iv);
+    
+    EVP_cleanup();
+    ERR_free_strings();
 }
 
 QByteArray Cryptographic::key()
 {
-    QByteArray key = QByteArray::fromRawData(reinterpret_cast<const char*>(m_key), KEY_LENGTH);
+    QByteArray key;
+    key.append(reinterpret_cast<const char*>(m_key), KEY_LENGTH);
     return key;
 }
 
 QByteArray Cryptographic::iv()
 {
-    QByteArray iv = QByteArray::fromRawData(reinterpret_cast<const char*>(m_iv), IV_LENGTH);
+    QByteArray iv;
+    iv.append(reinterpret_cast<const char*>(m_iv), IV_LENGTH);
     return iv;
-}
-
-QByteArray Cryptographic::encryptByteArray(QByteArray &plain)
-{
-    // retrieve pointer to data of QByteArray --> needs reinterpret cast
-    // actually this causes a dep copy, mabey use QByteArray::constData()
-    unsigned char *plain_data = reinterpret_cast<unsigned char*>(plain.data());
-    int plain_len = plain.size();
-    // cipher data --> to be filled by EVP_EncryptUpdate()
-    unsigned char *cipher_data = reinterpret_cast<unsigned char*>(malloc(sizeof(unsigned char*) * (plain_len + BLOCK_SIZE - 1)));
-    int tmp_len = 0;
-    int cipher_len = 0;
-    
-    // final QByteArray
-    QByteArray cipher;
-    
-    // encrypt here
-    EVP_CIPHER_CTX *ctx = nullptr;
-    // check for errors
-    if(!(ctx = EVP_CIPHER_CTX_new()))
-    {
-        qDebug() << "unable to create cipher context encrypt(ByteArray&)";
-        throw QString("unable to create cipher context encrypt(ByteArray&)");
-    }
-    else
-    {
-        qDebug() << "initialized ctx";
-    }
-    
-    if(EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, m_key, m_iv) != 1)
-    {
-        qDebug() << "unable to initialize encryption encrypt(ByteArray&)";
-        throw QString("unable to initialize encryption encrypt(ByteArray&)");
-    }
-    else
-    {
-        qDebug() << "initialized encryption";
-    }
-    
-    if(EVP_EncryptUpdate(ctx, cipher_data, &tmp_len, plain_data, plain_len) != 1)
-    {
-        qDebug() << "unable to initialize encryption encrypt(ByteArray&)";
-        throw QString("unable to initialize encryption encrypt(ByteArray&)");
-    }
-    else
-    {
-        qDebug() << "updated cipher data";
-        cipher_len += tmp_len;
-    }
-    
-    if(EVP_EncryptFinal_ex(ctx, cipher_data + tmp_len, &tmp_len) != 1)
-    {
-        qDebug() << "unable to finalize encryption encrypt(ByteArray&)";
-        throw QString("unable to finalize encryption encrypt(ByteArray&)");
-    }
-    else
-    {
-        qDebug() << "finalized encryption";
-        cipher_len += tmp_len;
-        
-        cipher.append(reinterpret_cast<char*>(cipher_data), cipher_len);
-    }
-    
-    EVP_CIPHER_CTX_cleanup(ctx);
-    
-    return cipher;
 }
 
 QByteArray Cryptographic::decryptByteArray(QByteArray &cipher)
 {
     // retrieve pointer to data of QByteArray --> needs reinterpret cast
-    unsigned char *cipher_data = reinterpret_cast<unsigned char*>(cipher.data());
+    const unsigned char *cipher_data = reinterpret_cast<const unsigned char*>(cipher.constData());
     int cipher_len = cipher.size();
     // cipher data --> to be filled by EVP_DecryptUpdate()
     unsigned char *plain_data = reinterpret_cast<unsigned char*>(malloc(sizeof(unsigned char*) * (cipher_len + BLOCK_SIZE)));
@@ -111,20 +50,16 @@ QByteArray Cryptographic::decryptByteArray(QByteArray &cipher)
     // final QByteArray
     QByteArray plain;
     
-    // encrypt here
-    EVP_CIPHER_CTX *ctx = nullptr;
-    // check for errors
-    if(!(ctx = EVP_CIPHER_CTX_new()))
+    try
     {
-        qDebug() << "unable to create cipher context decrypt(ByteArray&)";
-        throw QString("unable to create cipher context decrypt(ByteArray&)");
+        initCtx();
     }
-    else
+    catch(QString str)
     {
-        qDebug() << "initialized ctx";
+        throw str;
     }
     
-    if(EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, m_key, m_iv) != 1)
+    if(EVP_DecryptInit_ex(m_ctx, EVP_aes_256_cbc(), NULL, m_key, m_iv) != 1)
     {
         qDebug() << "unable to initialize decryption decrypt(ByteArray&)";
         throw QString("unable to initialize decryption decrypt(ByteArray&)");
@@ -134,10 +69,10 @@ QByteArray Cryptographic::decryptByteArray(QByteArray &cipher)
         qDebug() << "initialized decryption";
     }
     
-    if(EVP_DecryptUpdate(ctx, plain_data, &tmp_len, cipher_data, cipher_len) != 1)
+    if(EVP_DecryptUpdate(m_ctx, plain_data, &tmp_len, cipher_data, cipher_len) != 1)
     {
-        qDebug() << "unable to initialize decryption decrypt(ByteArray&)";
-        throw QString("unable to initialize decryption decrypt(ByteArray&)");
+        qDebug() << "unable to update decryption decrypt(ByteArray&)";
+        throw QString("unable to update decryption decrypt(ByteArray&)");
     }
     else
     {
@@ -145,10 +80,9 @@ QByteArray Cryptographic::decryptByteArray(QByteArray &cipher)
         plain_len += tmp_len;
     }
     
-    if(EVP_DecryptFinal_ex(ctx, plain_data + tmp_len, &tmp_len) != 1)
+    if(EVP_DecryptFinal_ex(m_ctx, plain_data + tmp_len, &tmp_len) != 1)
     {
         qDebug() << "unable to finalize encryption encrypt(ByteArray&)";
-        ERR_print_errors_fp(stderr);
         throw QString("unable to finalize encryption encrypt(ByteArray&)");
     }
     else
@@ -159,9 +93,131 @@ QByteArray Cryptographic::decryptByteArray(QByteArray &cipher)
         plain.append(reinterpret_cast<char*>(plain_data), plain_len);
     }
     
-    EVP_CIPHER_CTX_cleanup(ctx);
+    EVP_CIPHER_CTX_cleanup(m_ctx);
+    free(plain_data);
     
     return plain;
+}
+
+void Cryptographic::encryptFile(QIODevice &plain_file, QIODevice &cipher_file)
+{
+    // open QIODevices
+    plain_file.open(QIODevice::ReadOnly);
+    cipher_file.open(QIODevice::WriteOnly);
+    
+    // data streams
+    QDataStream plain_stream(&plain_file);
+    QDataStream cipher_stream(&cipher_file);
+    
+    // buffers
+    unsigned char *plain_buffer = reinterpret_cast<unsigned char*>(malloc(sizeof(unsigned char*) * BUFFER_SIZE));
+    unsigned char *cipher_buffer = reinterpret_cast<unsigned char*>(malloc(sizeof(unsigned char*) * 
+                                                                           (BUFFER_SIZE + BLOCK_SIZE - 1)));
+    
+    int tmp_len = 0; // the number of bytes written by OpenSSL
+    int read_bytes = 0; // the number of bytes read from the QIODevice
+    
+    try
+    {
+        initCtx();
+    }
+    catch(QString str)
+    {
+        throw str;
+    }
+    
+    if(EVP_EncryptInit_ex(m_ctx, EVP_aes_256_cbc(), NULL, m_key, m_iv) != 1)
+    {
+        qDebug() << "unable to initialize encryption encryptFile(QIODevice&, QIODevice&)";
+        throw QString("unable to initialize encryption encryptFile(QIODevice&, QIODevice&)");
+    }
+    
+    while(!plain_stream.atEnd())
+    {       
+        read_bytes = plain_stream.readRawData(reinterpret_cast<char*>(plain_buffer), BUFFER_SIZE);
+        
+        if(EVP_EncryptUpdate(m_ctx, cipher_buffer, &tmp_len, plain_buffer, read_bytes) != 1)
+        {
+            qDebug() << "unable to update encryption encrypt(ByteArray&)";
+            throw QString("unable to update encryption encrypt(ByteArray&)");
+        }
+        
+        cipher_stream.writeRawData(reinterpret_cast<const char*>(cipher_buffer), tmp_len);
+    }
+    
+    if(EVP_EncryptFinal_ex(m_ctx, cipher_buffer, &tmp_len) != 1)
+    {
+        qDebug() << "unable to finalize encryption encrypt(ByteArray&)";
+        throw QString("unable to finalize encryption encrypt(ByteArray&)");
+    }
+    else
+    {
+        cipher_stream.writeRawData(reinterpret_cast<const char*>(cipher_buffer), tmp_len);
+    }
+    
+    EVP_CIPHER_CTX_cleanup(m_ctx);
+    free(plain_buffer);
+    free(cipher_buffer);
+}
+
+void Cryptographic::decryptFile(QIODevice &cipher_file, QIODevice &plain_file)
+{
+    // open QIODevices
+    plain_file.open(QIODevice::WriteOnly);
+    cipher_file.open(QIODevice::ReadOnly);
+    
+    // data streams
+    QDataStream plain_stream(&plain_file);
+    QDataStream cipher_stream(&cipher_file);
+    
+    // buffers
+    unsigned char *plain_buffer = reinterpret_cast<unsigned char*>(malloc(sizeof(unsigned char*) * (BUFFER_SIZE + BLOCK_SIZE)));
+    unsigned char *cipher_buffer = reinterpret_cast<unsigned char*>(malloc(sizeof(unsigned char*) * BUFFER_SIZE));
+    
+    int tmp_len = 0; // the number of bytes written by OpenSSL
+    int read_bytes = 0; // the number of bytes read from the QIODevice
+    
+    try
+    {
+        initCtx();
+    }
+    catch(QString str)
+    {
+        throw str;
+    }
+    
+    if(EVP_DecryptInit_ex(m_ctx, EVP_aes_256_cbc(), NULL, m_key, m_iv) != 1)
+    {
+        qDebug() << "unable to initialize encryption encryptFile(QIODevice&, QIODevice&)";
+        throw QString("unable to initialize encryption encryptFile(QIODevice&, QIODevice&)");
+    }
+    
+    while(!cipher_stream.atEnd())
+    {       
+        read_bytes = cipher_stream.readRawData(reinterpret_cast<char*>(cipher_buffer), BUFFER_SIZE);
+        
+        if(EVP_DecryptUpdate(m_ctx, plain_buffer, &tmp_len, cipher_buffer, read_bytes) != 1)
+        {
+            qDebug() << "unable to update encryption encrypt(ByteArray&)";
+            throw QString("unable to update encryption encrypt(ByteArray&)");
+        }
+        
+        plain_stream.writeRawData(reinterpret_cast<const char*>(plain_buffer), tmp_len);
+    }
+    
+    if(EVP_DecryptFinal_ex(m_ctx, plain_buffer, &tmp_len) != 1)
+    {
+        qDebug() << "unable to finalize encryption encrypt(ByteArray&)";
+        throw QString("unable to finalize encryption encrypt(ByteArray&)");
+    }
+    else
+    {
+        plain_stream.writeRawData(reinterpret_cast<const char*>(plain_buffer), tmp_len);
+    }
+    
+    EVP_CIPHER_CTX_cleanup(m_ctx);
+    free(plain_buffer);
+    free(cipher_buffer);
 }
 
 // always call this before the first operation using OpenSSL!!!
@@ -174,6 +230,15 @@ void Cryptographic::initOpenSsl()
     
     // seed random number generator
     RAND_poll();
+}
+
+void Cryptographic::initCtx()
+{
+    if(!(m_ctx = EVP_CIPHER_CTX_new()))
+    {
+        qDebug() << "unable to create cipher context encrypt(ByteArray&)";
+        throw QString("unable to create cipher context encrypt(ByteArray&)");
+    }
 }
 
 QByteArray Cryptographic::deriveKey(QString &password)

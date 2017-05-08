@@ -3,8 +3,10 @@
  * decrypts data using AES-256.
  *
  * The key can be set directly or derived from a password
- * using deriveKey(QString &). The IV can be generated using
- * generateIV().
+ * using deriveKey(QString &). The IV is automatically 
+ * generated using generateIV() when a Cryptographic object is 
+ * initialized using a password with
+ * Cryptographic(QString &password, QObject *parent = 0).
  *
  * Due to AES-256 being used the key length is 256 bit and the
  * iv length is 128 bit. Given key and iv are expected to have 
@@ -26,6 +28,7 @@
 #define KEY_LENGTH 32
 #define IV_LENGTH 16
 #define BLOCK_SIZE IV_LENGTH
+#define BUFFER_SIZE 1024
 
 #include "cryptographic_global.h"
 #include <stdio.h>
@@ -36,6 +39,8 @@
 #include <QString>
 #include <QDebug>
 #include <QByteArray>
+#include <QFile>
+#include <QDataStream>
 
 class CRYPT_SHARED_EXPORT Cryptographic : public QObject
 {
@@ -52,10 +57,9 @@ public:
     QByteArray key();
     QByteArray iv();
     
-    // encrypt data
-    QByteArray encryptByteArray(QByteArray &plain);
-    // decrypt data
-    QByteArray decryptByteArray(QByteArray &cipher);
+    // encrypt a whole file
+    void encryptFile(QIODevice &plain_file, QIODevice &cipher_file);
+    void decryptFile(QIODevice &cipher_file, QIODevice &plain_file);
 
 signals:
 
@@ -64,9 +68,12 @@ public slots:
 private:
     unsigned char *m_key = nullptr;
     unsigned char *m_iv = nullptr;
+    EVP_CIPHER_CTX *m_ctx = nullptr;
 
     // initialize OpenSSL library
     void initOpenSsl();
+    // initialize cipher context
+    void initCtx();
     // generate iv
     QByteArray generateIV();
     // derive key from password
