@@ -37,68 +37,6 @@ QByteArray Cryptographic::iv()
     return iv;
 }
 
-QByteArray Cryptographic::decryptByteArray(QByteArray &cipher)
-{
-    // retrieve pointer to data of QByteArray --> needs reinterpret cast
-    const unsigned char *cipher_data = reinterpret_cast<const unsigned char*>(cipher.constData());
-    int cipher_len = cipher.size();
-    // cipher data --> to be filled by EVP_DecryptUpdate()
-    unsigned char *plain_data = reinterpret_cast<unsigned char*>(malloc(sizeof(unsigned char*) * (cipher_len + BLOCK_SIZE)));
-    int tmp_len = 0;
-    int plain_len = 0;
-    
-    // final QByteArray
-    QByteArray plain;
-    
-    try
-    {
-        initCtx();
-    }
-    catch(QString str)
-    {
-        throw str;
-    }
-    
-    if(EVP_DecryptInit_ex(m_ctx, EVP_aes_256_cbc(), NULL, m_key, m_iv) != 1)
-    {
-        qDebug() << "unable to initialize decryption decrypt(ByteArray&)";
-        throw QString("unable to initialize decryption decrypt(ByteArray&)");
-    }
-    else
-    {
-        qDebug() << "initialized decryption";
-    }
-    
-    if(EVP_DecryptUpdate(m_ctx, plain_data, &tmp_len, cipher_data, cipher_len) != 1)
-    {
-        qDebug() << "unable to update decryption decrypt(ByteArray&)";
-        throw QString("unable to update decryption decrypt(ByteArray&)");
-    }
-    else
-    {
-        qDebug() << "updated plain data";
-        plain_len += tmp_len;
-    }
-    
-    if(EVP_DecryptFinal_ex(m_ctx, plain_data + tmp_len, &tmp_len) != 1)
-    {
-        qDebug() << "unable to finalize encryption encrypt(ByteArray&)";
-        throw QString("unable to finalize encryption encrypt(ByteArray&)");
-    }
-    else
-    {
-        qDebug() << "finalized decryption";
-        plain_len += tmp_len;
-        
-        plain.append(reinterpret_cast<char*>(plain_data), plain_len);
-    }
-    
-    EVP_CIPHER_CTX_cleanup(m_ctx);
-    free(plain_data);
-    
-    return plain;
-}
-
 void Cryptographic::encryptFile(QIODevice &plain_file, QIODevice &cipher_file)
 {
     // open QIODevices
