@@ -27,3 +27,8 @@ LIBS += /usr/lib/libcrypto.so
 HEADERS += \
     tiny-enigma.h \
     tiny-enigma_global.h
+
+unix {
+    target.path = /usr/lib
+    INSTALLS += target
+}
