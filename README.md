@@ -1,5 +1,5 @@
 # Tiny-Enigma
-Tiny-Enigma is a simple to use and lightweight cryptographic library. It is designed to integrate into the Qt framework. Therefore it is impossible to be used without.<br/>
+Tiny-Enigma is a simple to use and lightweight cryptographic library using OpenSSL. It is designed to integrate into the Qt framework. Therefore it is impossible to be used without.<br/>
 ## Documentation
 To use the library one must only create an object of Tiny-Enigma and use its members.
 ```c++
