@@ -17,3 +17,6 @@ void encryptFile(QIODevice &plain_file, QIODevice &cipher_file);
 void decryptFile(QIODevice &cipher_file, QIODevice &plain_file);
 ```
 However, one can always convert any type into a QByteArray and use QBuffer as a QIODevice for it. That way one can use Tiny-Enigma on any type.
+## Motivation
+My original motivation for creating this project was the need of a simple cryptographic library that integrates well with Qt. Because nothing available fitted my needs - not simple enough - I decided to create it on my own.<br>
+The goal was to keep it as simple as possible but still general enough to work on any data that might be in need to be encrypted. Therefore, Tiny-Enigma works on QIODevices. Literally anything can be used as a QIODevice through QBuffer.
