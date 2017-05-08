@@ -1,12 +1,12 @@
 #include "tiny-enigma.h"
 
-Cryptographic::Cryptographic(unsigned char *key, unsigned char *iv, QObject *parent) 
+TinyEnigma::TinyEnigma(unsigned char *key, unsigned char *iv, QObject *parent) 
     : QObject(parent), m_key(key), m_iv(iv)
 {
     initOpenSsl();
 }
 
-Cryptographic::Cryptographic(QString &password, QObject *parent) 
+TinyEnigma::TinyEnigma(QString &password, QObject *parent) 
     : QObject(parent)
 {
     initOpenSsl();
@@ -14,7 +14,7 @@ Cryptographic::Cryptographic(QString &password, QObject *parent)
     m_iv = reinterpret_cast<unsigned char*>(generateIV().data());
 }
 
-Cryptographic::~Cryptographic()
+TinyEnigma::~TinyEnigma()
 {
     free(m_key);
     free(m_iv);
@@ -23,21 +23,21 @@ Cryptographic::~Cryptographic()
     ERR_free_strings();
 }
 
-QByteArray Cryptographic::key()
+QByteArray TinyEnigma::key()
 {
     QByteArray key;
     key.append(reinterpret_cast<const char*>(m_key), KEY_LENGTH);
     return key;
 }
 
-QByteArray Cryptographic::iv()
+QByteArray TinyEnigma::iv()
 {
     QByteArray iv;
     iv.append(reinterpret_cast<const char*>(m_iv), IV_LENGTH);
     return iv;
 }
 
-void Cryptographic::encryptFile(QIODevice &plain_file, QIODevice &cipher_file)
+void TinyEnigma::encryptFile(QIODevice &plain_file, QIODevice &cipher_file)
 {
     // open QIODevices
     plain_file.open(QIODevice::ReadOnly);
@@ -98,7 +98,7 @@ void Cryptographic::encryptFile(QIODevice &plain_file, QIODevice &cipher_file)
     free(cipher_buffer);
 }
 
-void Cryptographic::decryptFile(QIODevice &cipher_file, QIODevice &plain_file)
+void TinyEnigma::decryptFile(QIODevice &cipher_file, QIODevice &plain_file)
 {
     // open QIODevices
     plain_file.open(QIODevice::WriteOnly);
@@ -159,7 +159,7 @@ void Cryptographic::decryptFile(QIODevice &cipher_file, QIODevice &plain_file)
 }
 
 // always call this before the first operation using OpenSSL!!!
-void Cryptographic::initOpenSsl()
+void TinyEnigma::initOpenSsl()
 {
     // initialize library
     ERR_load_CRYPTO_strings();
@@ -170,7 +170,7 @@ void Cryptographic::initOpenSsl()
     RAND_poll();
 }
 
-void Cryptographic::initCtx()
+void TinyEnigma::initCtx()
 {
     if(!(m_ctx = EVP_CIPHER_CTX_new()))
     {
@@ -179,7 +179,7 @@ void Cryptographic::initCtx()
     }
 }
 
-QByteArray Cryptographic::deriveKey(QString &password)
+QByteArray TinyEnigma::deriveKey(QString &password)
 {
     // transform password into c string i.e. const char*
     const char *password_cstr = password.toStdString().c_str();
@@ -206,7 +206,7 @@ QByteArray Cryptographic::deriveKey(QString &password)
     
 }
 
-QByteArray Cryptographic::generateIV()
+QByteArray TinyEnigma::generateIV()
 {
     // allocate iv memory
     unsigned char *iv = (unsigned char*) malloc(IV_LENGTH * sizeof(unsigned char));

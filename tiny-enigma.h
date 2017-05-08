@@ -1,12 +1,12 @@
  /*************************************************************
- * An OpenSSL based cryptographic class that encrypts and
+ * An OpenSSL based TinyEnigma class that encrypts and
  * decrypts data using AES-256.
  *
  * The key can be set directly or derived from a password
  * using deriveKey(QString &). The IV is automatically 
- * generated using generateIV() when a Cryptographic object is 
+ * generated using generateIV() when a TinyEnigma object is 
  * initialized using a password with
- * Cryptographic(QString &password, QObject *parent = 0).
+ * TinyEnigma(QString &password, QObject *parent = 0).
  *
  * Due to AES-256 being used the key length is 256 bit and the
  * iv length is 128 bit. Given key and iv are expected to have 
@@ -22,8 +22,8 @@
  *  https://wiki.openssl.org/index.php/Random_Numbers
  *************************************************************/
 
-#ifndef CRYPTOGRAPHIC_H
-#define CRYPTOGRAPHIC_H
+#ifndef TINY_ENIGMA_H
+#define TINY_ENIGMA_H
 
 #define KEY_LENGTH 32
 #define IV_LENGTH 16
@@ -42,16 +42,16 @@
 #include <QFile>
 #include <QDataStream>
 
-class TINY_ENIGMA_SHARED_EXPORT Cryptographic : public QObject
+class TINY_ENIGMA_SHARED_EXPORT TinyEnigma : public QObject
 {
     Q_OBJECT
 public:
     // create instance with raw key
-    explicit Cryptographic(unsigned char *key, unsigned char *iv, QObject *parent = 0);
+    explicit TinyEnigma(unsigned char *key, unsigned char *iv, QObject *parent = 0);
     // create instance using password --> iv is generated internally
-    explicit Cryptographic(QString &password, QObject *parent = 0);
+    explicit TinyEnigma(QString &password, QObject *parent = 0);
     // destruct instance
-    ~Cryptographic();
+    ~TinyEnigma();
     
     // get methods
     QByteArray key();
@@ -80,4 +80,4 @@ private:
     QByteArray deriveKey(QString &password);
 };
 
-#endif // CRYPTOGRAPHIC_H
+#endif // TINY_ENIGMA_H
