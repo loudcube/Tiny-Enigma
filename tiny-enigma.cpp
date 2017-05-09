@@ -132,8 +132,8 @@ void TinyEnigma::decryptFile(QIODevice &cipher_file, QIODevice &plain_file)
     
     if(EVP_DecryptInit_ex(m_ctx, EVP_aes_256_cbc(), NULL, m_key, m_iv) != 1)
     {
-        qDebug() << "unable to initialize encryption encryptFile(QIODevice&, QIODevice&)";
-        throw QString("unable to initialize encryption encryptFile(QIODevice&, QIODevice&)");
+        qDebug() << "unable to initialize decryption decryptFile(QIODevice&, QIODevice&)";
+        throw QString("unable to initialize decryption decryptFile(QIODevice&, QIODevice&)");
     }
     
     while(!cipher_stream.atEnd())
@@ -142,8 +142,8 @@ void TinyEnigma::decryptFile(QIODevice &cipher_file, QIODevice &plain_file)
         
         if(EVP_DecryptUpdate(m_ctx, plain_buffer, &tmp_len, cipher_buffer, read_bytes) != 1)
         {
-            qDebug() << "unable to update encryption encrypt(ByteArray&)";
-            throw QString("unable to update encryption encrypt(ByteArray&)");
+            qDebug() << "unable to update decryption decryptFile(QIODevice&, QIODevice&)";
+            throw QString("unable to update decryption decryptFile(QIODevice&, QIODevice&)");
         }
         
         plain_stream.writeRawData(reinterpret_cast<const char*>(plain_buffer), tmp_len);
@@ -151,8 +151,8 @@ void TinyEnigma::decryptFile(QIODevice &cipher_file, QIODevice &plain_file)
     
     if(EVP_DecryptFinal_ex(m_ctx, plain_buffer, &tmp_len) != 1)
     {
-        qDebug() << "unable to finalize encryption encrypt(ByteArray&)";
-        throw QString("unable to finalize encryption encrypt(ByteArray&)");
+        qDebug() << "unable to finalize decryption decryptFile(QIODevice&, QIODevice&)";
+        throw QString("unable to finalize decryption decryptFile(QIODevice&, QIODevice&)");
     }
     else
     {
@@ -180,8 +180,8 @@ void TinyEnigma::initCtx()
 {
     if(!(m_ctx = EVP_CIPHER_CTX_new()))
     {
-        qDebug() << "unable to create cipher context encrypt(ByteArray&)";
-        throw QString("unable to create cipher context encrypt(ByteArray&)");
+        qDebug() << "unable to create cipher context";
+        throw QString("unable to create cipher context");
     }
 }
 
