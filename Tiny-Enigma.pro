@@ -28,7 +28,11 @@ HEADERS += \
     tiny-enigma.h \
     tiny-enigma_global.h
 
+lib_headers.files = $$HEADERS
+
 unix {
     target.path = /usr/lib
     INSTALLS += target
+
+    lib_headers.path = /usr/include
 }
