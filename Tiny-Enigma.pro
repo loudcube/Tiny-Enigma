@@ -35,4 +35,5 @@ unix {
     INSTALLS += target
 
     lib_headers.path = /usr/include
+    INSTALLS += lib_headers
 }
