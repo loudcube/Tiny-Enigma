@@ -13,8 +13,6 @@
  * exactly these proportions! Lengths longer or shorter than 
  * expected WILL result in a seqmentation fault.
  * 
- * Till now deriveKey(QString&) does not use any salt.
- * 
  * Further information:
  *  https://wiki.openssl.org/index.php/EVP_Symmetric_Encryption_
  *      and_Decryption
