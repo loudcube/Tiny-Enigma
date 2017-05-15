@@ -50,6 +50,11 @@ public:
     explicit TinyEnigma(QString &password, QObject *parent = 0);
     // destruct instance
     ~TinyEnigma();
+    // copy constructor
+    explicit TinyEnigma(const TinyEnigma&) = delete;
+    // operator =
+    TinyEnigma &operator =(const TinyEnigma&) = delete;
+    
     
     // get methods
     QByteArray key();
