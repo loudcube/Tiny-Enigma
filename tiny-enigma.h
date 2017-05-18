@@ -5,7 +5,7 @@
  * The key can be set directly or derived from a password
  * using deriveKey(QString &). The IV is automatically 
  * generated using generateIV() when a TinyEnigma object is 
- * initialized using a password with
+ * Initializationd using a password with
  * TinyEnigma(QString &password, QObject *parent = 0).
  *
  * Due to AES-256 being used the key length is 256 bit and the
@@ -44,7 +44,8 @@ class TINY_ENIGMA_SHARED_EXPORT TinyEnigma : public QObject
 {
     Q_OBJECT
 public:
-    enum class Error { CipherContextError, KeyDeriveError, AllocationError, InitializeError, UpdateError, FinalizeError };
+    enum class Error { CipherContextError, KeyDerivationError, AllocationError, InitializationError, 
+                       UpdateError, FinalizeError, OpenFileError };
     
     // create instance with raw key
     explicit TinyEnigma(unsigned char *key, unsigned char *iv, QObject *parent = 0);
@@ -77,9 +78,9 @@ private:
     unsigned char *m_iv = nullptr;
     EVP_CIPHER_CTX *m_ctx = nullptr;
 
-    // initialize OpenSSL library
+    // Initialization OpenSSL library
     void initOpenSsl();
-    // initialize cipher context
+    // Initialization cipher context
     void initCtx();
     // generate iv
     QByteArray generateIV();

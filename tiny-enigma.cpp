@@ -10,9 +10,15 @@ TinyEnigma::TinyEnigma(QString &password, QObject *parent)
     : QObject(parent)
 {
     initOpenSsl();
-    m_salt = generateSalt();
-    m_key = reinterpret_cast<unsigned char*>(deriveKey(password).data());
-    m_iv = reinterpret_cast<unsigned char*>(generateIV().data());
+    try{
+        m_salt = generateSalt();
+        m_key = reinterpret_cast<unsigned char*>(deriveKey(password).data());
+        m_iv = reinterpret_cast<unsigned char*>(generateIV().data());
+    }
+    catch(Error e)
+    {
+        throw e;
+    }
 }
 
 TinyEnigma::~TinyEnigma()
@@ -46,8 +52,10 @@ QByteArray TinyEnigma::iv()
 void TinyEnigma::encryptFile(QIODevice &plain_file, QIODevice &cipher_file)
 {
     // open QIODevices
-    plain_file.open(QIODevice::ReadOnly);
-    cipher_file.open(QIODevice::WriteOnly);
+    if(!plain_file.open(QIODevice::ReadOnly) || !cipher_file.open(QIODevice::WriteOnly))
+    {
+        throw Error::OpenFileError;
+    }
     
     // data streams
     QDataStream plain_stream(&plain_file);
@@ -65,14 +73,14 @@ void TinyEnigma::encryptFile(QIODevice &plain_file, QIODevice &cipher_file)
     {
         initCtx();
     }
-    catch(QString str)
+    catch(Error e)
     {
-        throw str;
+        throw e;
     }
     
     if(EVP_EncryptInit_ex(m_ctx, EVP_aes_256_cbc(), NULL, m_key, m_iv) != 1)
     {
-        throw Error::InitializeError;
+        throw Error::InitializationError;
     }
     
     while(!plain_stream.atEnd())
@@ -122,14 +130,14 @@ void TinyEnigma::decryptFile(QIODevice &cipher_file, QIODevice &plain_file)
     {
         initCtx();
     }
-    catch(QString str)
+    catch(Error e)
     {
-        throw str;
+        throw e;
     }
     
     if(EVP_DecryptInit_ex(m_ctx, EVP_aes_256_cbc(), NULL, m_key, m_iv) != 1)
     {
-        throw Error::InitializeError;
+        throw Error::InitializationError;
     }
     
     while(!cipher_stream.atEnd())
@@ -161,7 +169,7 @@ void TinyEnigma::decryptFile(QIODevice &cipher_file, QIODevice &plain_file)
 // always call this before the first operation using OpenSSL!!!
 void TinyEnigma::initOpenSsl()
 {
-    // initialize library
+    // Initialization library
     ERR_load_CRYPTO_strings();
     OpenSSL_add_all_ciphers();
     OPENSSL_config(NULL);
@@ -194,7 +202,7 @@ QByteArray TinyEnigma::deriveKey(QString &password)
     
     if(!PKCS5_PBKDF2_HMAC_SHA1(password_cstr, strlen(password_cstr), salt, BLOCK_SIZE, 1000, KEY_LENGTH, key))
     {
-        throw Error::KeyDeriveError;
+        throw Error::KeyDerivationError;
     }
     else
     {
