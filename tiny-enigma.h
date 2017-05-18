@@ -44,6 +44,8 @@ class TINY_ENIGMA_SHARED_EXPORT TinyEnigma : public QObject
 {
     Q_OBJECT
 public:
+    enum class Error { CipherContextError, KeyDeriveError, AllocationError, InitializeError, UpdateError, FinalizeError };
+    
     // create instance with raw key
     explicit TinyEnigma(unsigned char *key, unsigned char *iv, QObject *parent = 0);
     // create instance using password --> iv is generated internally

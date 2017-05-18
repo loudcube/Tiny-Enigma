@@ -72,8 +72,7 @@ void TinyEnigma::encryptFile(QIODevice &plain_file, QIODevice &cipher_file)
     
     if(EVP_EncryptInit_ex(m_ctx, EVP_aes_256_cbc(), NULL, m_key, m_iv) != 1)
     {
-        qDebug() << "unable to initialize encryption encryptFile(QIODevice&, QIODevice&)";
-        throw QString("unable to initialize encryption encryptFile(QIODevice&, QIODevice&)");
+        throw Error::InitializeError;
     }
     
     while(!plain_stream.atEnd())
@@ -82,8 +81,7 @@ void TinyEnigma::encryptFile(QIODevice &plain_file, QIODevice &cipher_file)
         
         if(EVP_EncryptUpdate(m_ctx, cipher_buffer, &tmp_len, plain_buffer, read_bytes) != 1)
         {
-            qDebug() << "unable to update encryption encrypt(ByteArray&)";
-            throw QString("unable to update encryption encrypt(ByteArray&)");
+            throw Error::UpdateError;
         }
         
         cipher_stream.writeRawData(reinterpret_cast<const char*>(cipher_buffer), tmp_len);
@@ -91,8 +89,7 @@ void TinyEnigma::encryptFile(QIODevice &plain_file, QIODevice &cipher_file)
     
     if(EVP_EncryptFinal_ex(m_ctx, cipher_buffer, &tmp_len) != 1)
     {
-        qDebug() << "unable to finalize encryption encrypt(ByteArray&)";
-        throw QString("unable to finalize encryption encrypt(ByteArray&)");
+        throw Error::FinalizeError;
     }
     else
     {
@@ -132,8 +129,7 @@ void TinyEnigma::decryptFile(QIODevice &cipher_file, QIODevice &plain_file)
     
     if(EVP_DecryptInit_ex(m_ctx, EVP_aes_256_cbc(), NULL, m_key, m_iv) != 1)
     {
-        qDebug() << "unable to initialize decryption decryptFile(QIODevice&, QIODevice&)";
-        throw QString("unable to initialize decryption decryptFile(QIODevice&, QIODevice&)");
+        throw Error::InitializeError;
     }
     
     while(!cipher_stream.atEnd())
@@ -142,8 +138,7 @@ void TinyEnigma::decryptFile(QIODevice &cipher_file, QIODevice &plain_file)
         
         if(EVP_DecryptUpdate(m_ctx, plain_buffer, &tmp_len, cipher_buffer, read_bytes) != 1)
         {
-            qDebug() << "unable to update decryption decryptFile(QIODevice&, QIODevice&)";
-            throw QString("unable to update decryption decryptFile(QIODevice&, QIODevice&)");
+            throw Error::UpdateError;
         }
         
         plain_stream.writeRawData(reinterpret_cast<const char*>(plain_buffer), tmp_len);
@@ -151,8 +146,7 @@ void TinyEnigma::decryptFile(QIODevice &cipher_file, QIODevice &plain_file)
     
     if(EVP_DecryptFinal_ex(m_ctx, plain_buffer, &tmp_len) != 1)
     {
-        qDebug() << "unable to finalize decryption decryptFile(QIODevice&, QIODevice&)";
-        throw QString("unable to finalize decryption decryptFile(QIODevice&, QIODevice&)");
+        throw Error::FinalizeError;
     }
     else
     {
@@ -180,8 +174,7 @@ void TinyEnigma::initCtx()
 {
     if(!(m_ctx = EVP_CIPHER_CTX_new()))
     {
-        qDebug() << "unable to create cipher context";
-        throw QString("unable to create cipher context");
+        throw Error::CipherContextError;
     }
 }
 
@@ -196,14 +189,12 @@ QByteArray TinyEnigma::deriveKey(QString &password)
     // check for success
     if(!key)
     {
-        qDebug() << "unable to allocate key memory: deriveKey(QString&)";
-        throw QString("unable to allocate key memory: deriveKey(QString&)");
+        throw Error::AllocationError;
     }
     
     if(!PKCS5_PBKDF2_HMAC_SHA1(password_cstr, strlen(password_cstr), salt, BLOCK_SIZE, 1000, KEY_LENGTH, key))
     {
-        qDebug() << "error at: deriveKey(QString&)";
-        throw QString("error at: deriveKey(QString&)");
+        throw Error::KeyDeriveError;
     }
     else
     {
@@ -218,6 +209,12 @@ QByteArray TinyEnigma::generateIV()
 {
     // allocate iv memory
     unsigned char *iv = (unsigned char*) malloc(IV_LENGTH * sizeof(unsigned char));
+    
+    if(iv = nullptr)
+    {
+        throw Error::AllocationError;
+    }
+    
     RAND_bytes(iv, IV_LENGTH);
     QByteArray iv_container;
     iv_container.setRawData(reinterpret_cast<const char*>(iv), IV_LENGTH);
@@ -226,5 +223,11 @@ QByteArray TinyEnigma::generateIV()
 
 QByteArray TinyEnigma::generateSalt()
 {
-    return generateIV();
+    try{
+        return generateIV();
+    }
+    catch(Error e)
+    {
+        throw e;
+    }
 }
